@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TokenGuard – AI Cost Control Proxy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.5;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1d1d1f, #007aff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .tagline {
+      font-size: 1.2rem;
+      color: #6e6e73;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e9e9ef;
+      padding-bottom: 1rem;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .feature {
+      background: #f9f9fb;
+      border-radius: 16px;
+      padding: 1rem;
+    }
+    .feature h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: #007aff;
+    }
+    .screenshot-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .screenshot-item {
+      border: 1px solid #e9e9ef;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .screenshot-item img {
+      width: 100%;
+      display: block;
+    }
+    .screenshot-caption {
+      padding: 0.75rem 1rem;
+      background: #f9f9fb;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1d1d1f;
+      border-top: 1px solid #e9e9ef;
+    }
+    .btn {
+      display: inline-block;
+      background: #1a1a1a;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 40px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-right: 1rem;
+      margin-top: 1rem;
+    }
+    .btn-secondary {
+      background: #e9e9ef;
+      color: #1d1d1f;
+    }
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e9e9ef;
+      text-align: center;
+      color: #86868b;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>TokenGuard</h1>
+  <div class="tagline">Stop expensive AI calls before they happen.<br>Save 70‑95% on simple tasks with smart routing.</div>
+
+  <p>TokenGuard is an open‑source proxy that sits between your application and AI providers (OpenAI, Anthropic). It <strong>estimates the cost of every API call before forwarding it</strong>, blocks expensive calls until a human approves them, and automatically routes simple requests to cheaper models – all with <strong>zero code changes</strong>.</p>
+
+  <div class="features">
+    <div class="feature"><h3>💰 Pre‑flight estimation</h3>Calculates cost in milliseconds; holds expensive calls for approval.</div>
+    <div class="feature"><h3>🎯 Smart routing</h3>Uses a local classifier to route simple tasks to cheap models (e.g., gpt-4o-mini).</div>
+    <div class="feature"><h3>🛡️ Loop detection</h3>Blocks runaway agents after 10 failures in 60 seconds.</div>
+    <div class="feature"><h3>📊 Real‑time dashboard</h3>Auto‑refreshing tabs for spend, savings, approvals, routing decisions, and retrospective analytics.</div>
+    <div class="feature"><h3>🔐 Security</h3>Basic auth, signed approval URLs, rate limiting, CORS, optional prompt redaction.</div>
+    <div class="feature"><h3>🧪 Mock provider</h3>Test the full workflow without real API keys.</div>
+  </div>
+
+  <h2 style="margin: 1.5rem 0 0.5rem;">Dashboard Preview</h2>
+  <div class="screenshot-gallery">
+    <div class="screenshot-item">
+      <img src="dashboard-overview.png" alt="Overview tab showing total spend, savings, and charts">
+      <div class="screenshot-caption">Overview – total spend, savings vs GPT-4o, daily savings chart</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="pre-flight.png" alt="Pre-flight tab with pending approvals and history">
+      <div class="screenshot-caption">Pre‑flight – pending approvals, history, and estimation accuracy</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="routing-decision.png" alt="Routing decisions table">
+      <div class="screenshot-caption">Routing – decisions, confidence, savings, cache hits</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="API-logs.png" alt="API logs table">
+      <div class="screenshot-caption">API Logs – every proxied call with tokens, cost, latency</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="Retrospective.png" alt="Retrospective tab listing approved calls with outcomes">
+      <div class="screenshot-caption">Retrospective – approved calls, business context, outcomes, reuse tracking</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem;">
+    <a href="https://github.com/yshtnwr-web/Tokenguard" class="btn">📦 GitHub Repository</a>
+    <a href="https://github.com/yshtnwr-web/Tokenguard/blob/main/README.md" class="btn btn-secondary">📄 Documentation</a>
+  </div>
+
+  <div class="footer">
+    MIT Licensed · Built with Node.js, Express, SQLite · Contribute on GitHub
+  </div>
+</div>
+</body>
+</html>
