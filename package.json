@@ -1,0 +1,23 @@
+{
+  "name": "tokenguard",
+  "version": "1.0.0",
+  "description": "AI token cost management proxy server for OpenAI and Anthropic APIs.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "express-basic-auth": "^1.2.1",
+    "express-rate-limit": "^8.5.2",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

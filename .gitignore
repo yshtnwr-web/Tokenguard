@@ -1,0 +1,7 @@
+node_modules/
+.env
+tokenguard.sqlite
+tokenguard.sqlite-shm
+tokenguard.sqlite-wal
+.DS_Store
+*.log

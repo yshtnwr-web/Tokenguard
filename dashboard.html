@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TokenGuard – AI cost control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.4;
+    }
+    .header {
+      background: white;
+      border-bottom: 1px solid #e9e9ef;
+      padding: 1.5rem 2rem;
+    }
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1d1d1f, #86868b);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .status {
+      font-size: 0.85rem;
+      color: #86868b;
+      margin-top: 0.25rem;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 2rem;
+      border-bottom: 1px solid #e9e9ef;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #6e6e73;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: #1d1d1f; }
+    .tab-btn.active {
+      color: #007aff;
+      border-bottom: 2px solid #007aff;
+      margin-bottom: -0.5rem;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .metric {
+      background: white;
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid #e9e9ef;
+    }
+    .metric span {
+      display: block;
+      font-size: 0.85rem;
+      color: #6e6e73;
+      margin-bottom: 0.5rem;
+    }
+    .metric strong {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+    .baseline-selector {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      background: white;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #e9e9ef;
+    }
+    .baseline-selector label { font-weight: 500; color: #1d1d1f; }
+    select {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #d0d0d5;
+      background: white;
+      font-family: inherit;
+    }
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #e9e9ef;
+      margin-bottom: 1.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e9e9ef;
+    }
+    th {
+      font-weight: 600;
+      color: #6e6e73;
+      background: #fbfbfd;
+    }
+    .empty { padding: 2rem; text-align: center; color: #6e6e73; }
+    .warn { color: #e67e22; font-weight: 600; }
+    .action-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .approve { background: #10b981; color: white; }
+    .approve:hover { background: #059669; }
+    .reject { background: #ef4444; color: white; }
+    .reject:hover { background: #dc2626; }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .chart {
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #e9e9ef;
+      padding: 1rem;
+    }
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      height: 150px;
+      padding-top: 1rem;
+    }
+    .bar {
+      flex: 1;
+      background: #007aff;
+      border-radius: 4px 4px 0 0;
+      min-width: 20px;
+    }
+    .legend { font-size: 0.75rem; color: #6e6e73; margin-top: 0.75rem; }
+    @media (max-width: 700px) {
+      .container { padding: 1rem; }
+      .header { padding: 1rem; }
+      .tabs { gap: 1rem; }
+      .two-columns { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>TokenGuard</h1>
+  <div class="status" id="last-updated">Loading dashboard...</div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="preflight">Pre‑flight</button>
+    <button class="tab-btn" data-tab="routing">Routing</button>
+    <button class="tab-btn" data-tab="apilogs">API Logs</button>
+    <button class="tab-btn" data-tab="retrospective">Retrospective</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="baseline-selector">
+      <label>Baseline model for savings:</label>
+      <select id="baseline-model">
+        <option value="gpt-4o">GPT-4o (default)</option>
+        <option value="claude-opus-4">Claude Opus 4</option>
+        <option value="gpt-4o-mini">GPT-4o-mini</option>
+        <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+        <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+      </select>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="two-columns">
+      <div class="table-wrap"><table><thead><tr><th>Team</th><th>Savings (vs baseline)</th></tr></thead><tbody id="savings-by-team"></tbody></table></div>
+      <div class="table-wrap"></table><thead><tr><th>Model (actual)</th><th>Savings (vs baseline)</th></tr></thead><tbody id="savings-by-model"></tbody></table></div>
+    </div>
+    <div class="chart">
+      <h3>Cumulative Savings Over Time</h3>
+      <canvas id="cumulative-chart" width="800" height="200" style="width:100%; height:200px;"></canvas>
+      <div class="legend">Total savings accumulated day by day</div>
+    </div>
+    <div class="charts">
+      <div class="chart"><h3>Daily Savings (routing)</h3><div class="bars" id="daily-savings-chart"></div><div class="legend" id="daily-savings-legend"></div></div>
+      <div class="chart"><h3>Tier Distribution</h3><div id="tier-chart"></div><div class="legend" id="tier-legend"></div></div>
+      <div class="chart"><h3>Routing Efficiency</h3><div id="efficiency-chart"></div><div class="legend">Efficiency = savings ÷ original projected spend</div></div>
+    </div>
+  </div>
+
+  <!-- PRE‑FLIGHT TAB -->
+  <div id="tab-preflight" class="tab-content">
+    <div class="summary" id="preflight-summary"></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Time</th><th>Team</th><th>Estimated Cost</th><th>Model</th><th>Request Preview</th><th>Actions</th></tr></thead><tbody id="pending-approvals"></tbody></table>
+      <div class="empty" id="pending-empty" hidden>No pending approvals.</div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Time</th><th>Team</th><th>Outcome</th><th>Estimated Cost</th><th>Actual Cost</th><th>Accurate</th></tr></thead><tbody id="approval-history"></tbody></table>
+      <div class="empty" id="history-empty" hidden>No approval history yet.</div>
+    </div>
+  </div>
+
+  <!-- ROUTING TAB -->
+  <div id="tab-routing" class="tab-content">
+    <div class="summary" id="routing-summary"></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Time</th><th>Team</th><th>Original Model</th><th>Actual Model</th><th>Tier</th><th>Confidence</th><th>Savings</th><th>Quality Pass</th><th>Cache Hit</th></tr></thead><tbody id="routing-decisions"></tbody></table>
+      <div class="empty" id="routing-empty" hidden>No routing decisions yet.</div>
+    </div>
+  </div>
+
+  <!-- API LOGS TAB -->
+  <div id="tab-apilogs" class="tab-content">
+    <div class="table-wrap">
+      <table><thead><tr><th>Timestamp</th><th>Team</th><th>Provider</th><th>Model</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th><th>Saved</th><th>Duration</th><th>Status</th></tr></thead><tbody id="calls"></tbody></table>
+      <div class="empty" id="empty" hidden>No API calls logged yet.</div>
+    </div>
+  </div>
+
+  <!-- RETROSPECTIVE TAB (simplified) -->
+  <div id="tab-retrospective" class="tab-content">
+    <div class="summary">
+      <div class="metric"><span>Total approved calls</span><strong id="total-approved">0</strong></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Team</th><th>Cost</th><th>Model</th><th>Trigger</th><th>Business Object</th><th>Expected Outcome</th><th>Actual Outcome</th><th>Reused?</th><th>Artifact Link</th></tr>
+        </thead>
+        <tbody id="retrospective-table"></tbody>
+      </table>
+      <div class="empty" id="retro-empty" hidden>No approved calls found.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 4 });
+  const pct = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
+
+  let cumulativeChart = null;
+  let currentBaseline = "gpt-4o";
+
+  function safeEl(id) {
+    const el = document.getElementById(id);
+    if (!el) console.warn(`Element missing: ${id}`);
+    return el;
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
+  }
+
+  async function updateSavingsBreakdown() {
+    const res = await fetch(`/api/savings-breakdown?baseline=${currentBaseline}`);
+    const data = await res.json();
+    const totalSavings = data.teams.reduce((sum, t) => sum + t.savings, 0);
+    const summaryDiv = safeEl("summary");
+    if (!summaryDiv) return;
+    const totalMetric = `<div class="metric"><span>Total saved vs ${currentBaseline.toUpperCase()}</span><strong>${money.format(totalSavings)}</strong></div>`;
+    const existing = summaryDiv.innerHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = existing;
+    const firstMetric = tempDiv.querySelector('.metric');
+    if (firstMetric && firstMetric.querySelector('span').innerText.includes('Total saved vs')) {
+      firstMetric.outerHTML = totalMetric;
+      summaryDiv.innerHTML = tempDiv.innerHTML;
+    } else {
+      summaryDiv.innerHTML = totalMetric + existing;
+    }
+    const teamTbody = safeEl("savings-by-team");
+    if (teamTbody) teamTbody.innerHTML = data.teams.map(t => `<tr><td>${escapeHtml(t.team)}</td><td>${money.format(t.savings)}</td></tr>`).join("") || '<tr><td colspan="2" class="empty">No savings data</td></tr>';
+    const modelTbody = safeEl("savings-by-model");
+    if (modelTbody) modelTbody.innerHTML = data.models.map(m => `<tr><td>${escapeHtml(m.model)}</td><td>${money.format(m.savings)}</td></tr>`).join("") || '<tr><td colspan="2" class="empty">No savings data</td></tr>';
+    const cumulative = data.cumulative || [];
+    if (cumulativeChart) cumulativeChart.destroy();
+    const ctx = document.getElementById('cumulative-chart')?.getContext('2d');
+    if (ctx) {
+      cumulativeChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: cumulative.map(d => d.day), datasets: [{ label: 'Cumulative Savings', data: cumulative.map(d => d.cumulative_savings), borderColor: '#007aff', fill: false, tension: 0.1 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => money.format(ctx.raw) } } } }
+      });
+    }
+  }
+
+  async function renderPreflight() {
+    try {
+      const res = await fetch("/api/pending-approvals");
+      const data = await res.json();
+      const pending = data.pending || [];
+      const stats = data.stats || {};
+      const summaryDiv = safeEl("preflight-summary");
+      if (summaryDiv) {
+        summaryDiv.innerHTML = `
+          <div class="metric"><span>Total calls blocked this month</span><strong>${Number(stats.blocked_calls || pending.length).toLocaleString()}</strong></div>
+          <div class="metric"><span>Estimated savings from blocked calls</span><strong>${money.format(Number(stats.estimated_savings_blocked_usd || 0))}</strong></div>
+          <div class="metric"><span>Pending approvals</span><strong class="${pending.length ? 'warn' : ''}">${pending.length}</strong></div>
+          <div class="metric"><span>Estimation accuracy</span><strong>${pct.format(Number(stats.estimation_accuracy_rate || 0))}</strong></div>
+          <div class="metric"><span>Avg estimation time</span><strong>${Number(stats.avg_duration_ms || 0).toFixed(1)} ms</strong></div>
+        `;
+      }
+      const pendingBody = safeEl("pending-approvals");
+      const pendingEmpty = safeEl("pending-empty");
+      if (pendingBody) {
+        pendingBody.innerHTML = pending.map(p => `
+          <tr>
+            <td>${escapeHtml(new Date(p.timestamp).toLocaleString())}</td>
+            <td>${escapeHtml(p.team)}</td>
+            <td>${money.format(Number(p.estimated_cost_usd || 0))}</td>
+            <td>${escapeHtml(p.model_requested)}</td>
+            <td>${escapeHtml((p.request_summary || "").slice(0, 50))}...</td>
+            <td><div class="action-row"><button class="approve" onclick="decideApproval('${escapeHtml(p.id)}','approved','${escapeHtml(p.token)}')">Approve</button><button class="reject" onclick="decideApproval('${escapeHtml(p.id)}','rejected','${escapeHtml(p.token)}')">Reject</button></div></td>
+          </tr>
+        `).join("");
+      }
+      if (pendingEmpty) pendingEmpty.hidden = pending.length > 0;
+      const historyRes = await fetch("/api/approval-stats");
+      const historyData = await historyRes.json();
+      const history = historyData.recent || [];
+      const historyBody = safeEl("approval-history");
+      const historyEmpty = safeEl("history-empty");
+      if (historyBody) {
+        historyBody.innerHTML = history.map(h => `
+          <tr>
+            <td>${escapeHtml(new Date(h.timestamp).toLocaleString())}</td>
+            <td>${escapeHtml(h.team)}</td>
+            <td class="${h.status === 'approved' ? '' : 'warn'}">${escapeHtml(h.status)}</td>
+            <td>${money.format(Number(h.estimated_cost_usd || 0))}</td>
+            <td>${h.actual_cost_usd == null ? '-' : money.format(Number(h.actual_cost_usd))}</td>
+            <td>${h.was_accurate == null ? '-' : Number(h.was_accurate) ? 'Yes' : 'No'}</td>
+          </tr>
+        `).join("");
+      }
+      if (historyEmpty) historyEmpty.hidden = history.length > 0;
+    } catch(e) { console.error("Preflight render error", e); }
+  }
+
+  async function decideApproval(id, decision, token) {
+    let reason = "";
+    if (decision === "rejected") reason = prompt("Rejection reason") || "rejected from dashboard";
+    const response = await fetch(`/approve/${id}/decision`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision, reason, resolved_by: "dashboard", token })
+    });
+    if (response.ok) refreshDashboard();
+    else { const err = await response.json(); alert("Failed: " + (err.error?.message || "Unknown error")); }
+  }
+
+  async function loadRetrospective() {
+    const res = await fetch("/api/retrospective?limit=200");
+    const data = await res.json();
+    const approvals = data.approvals || [];
+    const totalApproved = safeEl("total-approved");
+    if (totalApproved) totalApproved.innerText = approvals.length;
+    const tbody = safeEl("retrospective-table");
+    const retroEmpty = safeEl("retro-empty");
+    if (tbody) {
+      tbody.innerHTML = approvals.map(a => `
+        <tr>
+          <td>${escapeHtml(new Date(a.resolved_at).toLocaleString())}</td>
+          <td>${escapeHtml(a.team)}</td>
+          <td>${money.format(a.actual_cost_usd || a.estimated_cost_usd)}</td>
+          <td>${escapeHtml(a.model_requested)}</td>
+          <td>${escapeHtml(a.trigger_source || '-')}</td>
+          <td>${escapeHtml(a.business_object || '-')}</td>
+          <td>${escapeHtml(a.expected_outcome || '-')}</td>
+          <td>${escapeHtml(a.actual_outcome || '-')}</td>
+          <td>${a.was_reused ? 'Yes' : 'No'}</td>
+          <td>${a.artifact_link ? `<a href="${escapeHtml(a.artifact_link)}" target="_blank">link</a>` : '-'}</td>
+        </tr>
+      `).join("");
+    }
+    if (retroEmpty) retroEmpty.hidden = approvals.length > 0;
+  }
+
+  function renderSummary(data) {
+    const totalSpend = data.spendByTeam.reduce((s, r) => s + Number(r.total_spend_usd || 0), 0);
+    const summaryDiv = safeEl("summary");
+    if (!summaryDiv) return;
+    summaryDiv.innerHTML = `<div class="metric"><span>Total spend this month</span><strong>${money.format(totalSpend)}</strong></div>` + data.spendByTeam.map(row => `<div class="metric"><span>${escapeHtml(row.team)} monthly spend</span><strong>${money.format(Number(row.total_spend_usd || 0))}</strong></div>`).join("");
+  }
+
+  function renderCalls(calls) {
+    const tbody = safeEl("calls");
+    const empty = safeEl("empty");
+    if (tbody) {
+      tbody.innerHTML = calls.map(call => `
+        <tr>
+          <td>${escapeHtml(new Date(call.timestamp).toLocaleString())}</td>
+          <td>${escapeHtml(call.team)}</td>
+          <td>${escapeHtml(call.provider)}</td>
+          <td>${escapeHtml(call.model)}</td>
+          <td>${Number(call.input_tokens || 0).toLocaleString()}</td>
+          <td>${Number(call.output_tokens || 0).toLocaleString()}</td>
+          <td>${money.format(Number(call.estimated_cost_usd || 0))}</td>
+          <td>${money.format(Number(call.savings_usd || 0))}</td>
+          <td>${Number(call.duration_ms || 0)} ms</td>
+          <td class="${Number(call.status_code) >= 400 ? 'warn' : ''}">${Number(call.status_code)}</td>
+        </tr>
+      `).join("");
+    }
+    if (empty) empty.hidden = calls.length > 0;
+  }
+
+  function renderRoutingSummary(stats) {
+    const s = stats.summary || {};
+    const routingSummary = safeEl("routing-summary");
+    if (routingSummary) {
+      routingSummary.innerHTML = `
+        <div class="metric"><span>Total saved through routing</span><strong>${money.format(Number(s.total_saved_usd || 0))}</strong></div>
+        <div class="metric"><span>Requests routed cheaper</span><strong>${Number(s.routed_requests || 0).toLocaleString()}</strong></div>
+        <div class="metric"><span>Routing success rate</span><strong>${pct.format(Number(s.routing_success_rate || 0))}</strong></div>
+        <div class="metric"><span>Avg classifier confidence</span><strong>${pct.format(Number(s.avg_confidence || 0))}</strong></div>
+        <div class="metric"><span>Quality fallback rate</span><strong>${pct.format(Number(s.quality_fallback_rate || 0))}</strong></div>
+        <div class="metric"><span>Cache hit rate</span><strong>${pct.format(Number(s.cache_hit_rate || 0))}</strong></div>
+      `;
+    }
+  }
+
+  function renderDailySavings(rows) {
+    const chartDiv = safeEl("daily-savings-chart");
+    const legend = safeEl("daily-savings-legend");
+    if (!chartDiv) return;
+    const max = Math.max(...rows.map(r => Number(r.savings_usd || 0)), 0.000001);
+    chartDiv.innerHTML = rows.length ? rows.map(r => `<div class="bar" title="${r.day}: ${money.format(Number(r.savings_usd))}" style="height:${Math.max(4, (Number(r.savings_usd) / max) * 140)}px"></div>`).join("") : '<div class="empty">No savings data</div>';
+    if (legend) legend.textContent = rows.length ? `${rows.length} days tracked` : "";
+  }
+
+  function renderTierChart(rows) {
+    const colors = ["#007aff", "#5856d6", "#ff9f0a"];
+    const total = rows.reduce((s, r) => s + Number(r.count || 0), 0);
+    let offset = 25;
+    const slices = rows.map((r, i) => { const val = total ? (Number(r.count || 0) / total) * 100 : 0; const slice = `${colors[i % colors.length]} ${offset}% ${offset + val}%`; offset += val; return slice; });
+    const bg = slices.length ? `conic-gradient(${slices.join(", ")})` : "#e9e9ef";
+    const tierChart = safeEl("tier-chart");
+    const tierLegend = safeEl("tier-legend");
+    if (tierChart) tierChart.innerHTML = `<div style="width:150px;height:150px;border-radius:50%;margin:12px auto;background:${bg}"></div>`;
+    if (tierLegend) tierLegend.innerHTML = rows.map((r, i) => `<span><b style="color:${colors[i % colors.length]}">■</b> ${r.tier}: ${r.count}</span>`).join("");
+  }
+
+  function renderEfficiencyChart(rows) {
+    const container = safeEl("efficiency-chart");
+    if (!container) return;
+    if (!rows.length) { container.innerHTML = '<div class="empty">No efficiency data</div>'; return; }
+    const w = 320, h = 150;
+    const points = rows.map((r, i) => { const x = rows.length === 1 ? w/2 : (i / (rows.length-1)) * w; const y = h - (Math.min(Number(r.efficiency || 0), 1) * h); return `${x},${y}`; }).join(" ");
+    container.innerHTML = `<svg viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="#007aff" stroke-width="3"/><line x1="0" y1="${h-1}" x2="${w}" y2="${h-1}" stroke="#e9e9ef"/></svg>`;
+  }
+
+  function renderRoutingDecisions(rows) {
+    const tbody = safeEl("routing-decisions");
+    const empty = safeEl("routing-empty");
+    if (tbody) {
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${escapeHtml(new Date(r.timestamp).toLocaleString())}</td>
+          <td>${escapeHtml(r.team)}</td>
+          <td>${escapeHtml(r.original_model)}</td>
+          <td>${escapeHtml(r.actual_model)}</td>
+          <td>${escapeHtml(r.classification_tier || "unknown")}</td>
+          <td>${pct.format(Number(r.classification_confidence || 0))}</td>
+          <td>${money.format(Number(r.savings_usd || 0))}</td>
+          <td class="${Number(r.quality_check_passed) ? '' : 'warn'}">${Number(r.quality_check_passed) ? 'Yes' : 'No'}</td>
+          <td>${Number(r.cache_hit) ? 'Yes' : 'No'}</td>
+        </tr>
+      `).join("");
+    }
+    if (empty) empty.hidden = rows.length > 0;
+  }
+
+  const tabs = document.querySelectorAll(".tab-btn");
+  const contents = {
+    overview: document.getElementById("tab-overview"),
+    preflight: document.getElementById("tab-preflight"),
+    routing: document.getElementById("tab-routing"),
+    apilogs: document.getElementById("tab-apilogs"),
+    retrospective: document.getElementById("tab-retrospective")
+  };
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tab = btn.getAttribute("data-tab");
+      tabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Object.values(contents).forEach(c => c?.classList.remove("active"));
+      const activeContent = contents[tab];
+      if (activeContent) activeContent.classList.add("active");
+      if (tab === "retrospective") loadRetrospective();
+    });
+  });
+
+  document.getElementById("baseline-model")?.addEventListener("change", (e) => { currentBaseline = e.target.value; updateSavingsBreakdown(); });
+
+  async function refreshDashboard() {
+    try {
+      const [dashboardRes, routingRes] = await Promise.all([fetch("/api/dashboard"), fetch("/api/routing-stats")]);
+      const dashboard = await dashboardRes.json();
+      const routing = await routingRes.json();
+      renderSummary(dashboard);
+      renderCalls(dashboard.recentCalls || []);
+      renderRoutingSummary(routing);
+      renderDailySavings(routing.dailySavings || []);
+      renderTierChart(routing.tierDistribution || []);
+      renderEfficiencyChart(routing.efficiencyOverTime || []);
+      renderRoutingDecisions(routing.recentDecisions || []);
+      await renderPreflight();
+      await updateSavingsBreakdown();
+      if (document.querySelector(".tab-btn.active")?.getAttribute("data-tab") === "retrospective") loadRetrospective();
+      const lastUpdated = safeEl("last-updated");
+      if (lastUpdated) lastUpdated.textContent = `Last updated ${new Date().toLocaleTimeString()}`;
+    } catch(err) {
+      const lastUpdated = safeEl("last-updated");
+      if (lastUpdated) lastUpdated.textContent = `Update failed: ${err.message}`;
+      console.error(err);
+    }
+  }
+
+  refreshDashboard();
+  setInterval(refreshDashboard, 10000);
+</script>
+</body>
+</html>

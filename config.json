@@ -1,0 +1,59 @@
+{
+  "teams": {
+    "engineering": {
+      "monthlyBudget": 500,
+      "preflight": {
+        "enabled": true,
+        "warn_above_usd": 0.05,
+        "block_above_usd": 0.20,
+        "agentic_block_above_usd": 0.50,
+        "approval_timeout_minutes": 10,
+        "auto_approve_if_similar_approved": true,
+        "agentic_chain_multiplier": 8
+      }
+    },
+    "marketing": {
+      "monthlyBudget": 100,
+      "preflight": {
+        "enabled": true,
+        "warn_above_usd": 0.02,
+        "block_above_usd": 0.10,
+        "agentic_block_above_usd": 0.25,
+        "approval_timeout_minutes": 5,
+        "auto_approve_if_similar_approved": true,
+        "agentic_chain_multiplier": 8
+      }
+    },
+    "default": {
+      "monthlyBudget": 200,
+      "preflight": {
+        "enabled": true,
+        "warn_above_usd": 0.0000005,
+        "block_above_usd": 0.000001,
+        "agentic_block_above_usd": 0.000002,
+        "approval_timeout_minutes": 10,
+        "auto_approve_if_similar_approved": true,
+        "agentic_chain_multiplier": 8
+      }
+    }
+  },
+  "providers": {
+    "openai": { "apiKey": "ENV_OPENAI_API_KEY" },
+    "anthropic": { "apiKey": "ENV_ANTHROPIC_API_KEY" }
+  },
+  "routing": {
+    "enabled": true,
+    "min_confidence_threshold": 0.65,
+    "allow_code_downgrade": true,
+    "allow_agentic_downgrade": false,
+    "quality_check_enabled": true,
+    "auto_retry_on_quality_fail": true,
+    "classifier_cache_enabled": true,
+    "classifier_cache_ttl_minutes": 60,
+    "min_savings_threshold_usd": 0.001,
+    "multi_provider_fallback_enabled": true
+  },
+  "privacy": {
+    "redact_prompts": false
+  }
+}
